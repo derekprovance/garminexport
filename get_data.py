@@ -32,20 +32,14 @@ if __name__ == "__main__":
     # positional args
     parser.add_argument(
         "username", metavar="<username>", type=str, help="Account user name.")
-    parser.add_argument(
-        "activity", metavar="<activity>", type=int, help="Activity ID.")
-    parser.add_argument(
-        "format", metavar="<format>", type=str,
-        help="Export format (one of: {}).".format(
-            garminexport.backup.export_formats))
 
     # optional args
     parser.add_argument(
         "--password", type=str, help="Account password.")
     parser.add_argument(
-        "--destination", metavar="DIR", type=str,
-        help=("Destination directory for downloaded activity. Default: "
-              "./activities/"), default=os.path.join(".", "activities"))
+        "--back", type=str, help="Days back from start to process.")
+    parser.add_argument(
+        "--start", type=str, help="How many days from the current date to start processing?")
     parser.add_argument(
         "--log-level", metavar="LEVEL", type=str,
         help=("Desired log output level (DEBUG, INFO, WARNING, ERROR). "
@@ -69,10 +63,10 @@ if __name__ == "__main__":
             args.password = getpass.getpass("Enter password: ")
         with GarminClient(args.username, args.password) as client:
             log.info("fetching activity {} ...".format(args.activity))
-            summary = client.get_activity_summary(args.activity)
-            starttime = dateutil.parser.parse(summary["activity"]["activitySummary"]["BeginTimestamp"]["value"])
-            garminexport.backup.download(
-                client, (args.activity, starttime), args.destination, export_formats=[args.format])
+            "summary = client.get_activity_summary(args.activity)
+            "starttime = dateutil.parser.parse(summary["activity"]["activitySummary"]["BeginTimestamp"]["value"])
+            "garminexport.backup.download(
+            "    client, (args.activity, starttime), args.destination, export_formats=[args.format])
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         log.error(u"failed with exception: %s", e)

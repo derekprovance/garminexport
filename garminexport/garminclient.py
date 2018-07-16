@@ -17,7 +17,6 @@ from io import BytesIO
 from functools import wraps
 from builtins import range
 
-#
 # Note: For more detailed information about the API services
 # used by this module, log in to your Garmin Connect account
 # through the web browser and visit the API documentation page
@@ -25,12 +24,9 @@ from builtins import range
 #   https://connect.garmin.com/proxy/activity-service-1.3/index.html
 #   https://connect.garmin.com/proxy/activity-search-service-1.2/index.html
 #
-
-#
 # Other useful references:
 #   https://github.com/cpfair/tapiriik/blob/master/tapiriik/services/GarminConnect/garminconnect.py
 #   https://forums.garmin.com/showthread.php?72150-connect-garmin-com-signin-question/page2
-#
 
 log = logging.getLogger(__name__)
 
