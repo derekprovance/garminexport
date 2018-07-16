@@ -8,13 +8,14 @@ import logging
 import os
 import re
 import requests
-from StringIO import StringIO
 import sys
 import zipfile
 import dateutil
 import dateutil.parser
 import os.path
+from io import BytesIO
 from functools import wraps
+from builtins import range
 
 #
 # Note: For more detailed information about the API services
@@ -163,7 +164,7 @@ class GarminClient(object):
         batch_size = 100
         # fetch in batches since the API doesn't allow more than a certain
         # number of activities to be retrieved on every invocation
-        for start_index in xrange(0, sys.maxint, batch_size):
+        for start_index in range(0, sys.maxsize, batch_size):
             next_batch = self._fetch_activity_ids_and_ts(start_index, batch_size)
             if not next_batch:
                 break
