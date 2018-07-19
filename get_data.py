@@ -37,7 +37,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--password", type=str, help="Account password.")
     parser.add_argument(
-        "--back", type=str, help="Days back from start to process.")
+        "--days", type=int, help="Days back from start to process.")
     parser.add_argument(
         "--start", type=str, help="How many days from the current date to start processing?")
     parser.add_argument(
@@ -49,25 +49,6 @@ if __name__ == "__main__":
     if not args.log_level in LOG_LEVELS:
         raise ValueError("Illegal log-level argument: {}".format(
             args.log_level))
-    if not args.format in garminexport.backup.export_formats:
-        raise ValueError(
-            "Uncrecognized export format: '{}'. Must be one of {}".format(
-                args.format, garminexport.backup.export_formats))
     logging.root.setLevel(LOG_LEVELS[args.log_level])
 
-    try:
-        if not os.path.isdir(args.destination):
-            os.makedirs(args.destination)
-
-        if not args.password:
-            args.password = getpass.getpass("Enter password: ")
-        with GarminClient(args.username, args.password) as client:
-            log.info("fetching activity {} ...".format(args.activity))
-            "summary = client.get_activity_summary(args.activity)
-            "starttime = dateutil.parser.parse(summary["activity"]["activitySummary"]["BeginTimestamp"]["value"])
-            "garminexport.backup.download(
-            "    client, (args.activity, starttime), args.destination, export_formats=[args.format])
-    except Exception as e:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        log.error(u"failed with exception: %s", e)
-        raise
+    print( args.start )
