@@ -8,19 +8,22 @@ import time
 log = logging.getLogger(__name__)
 
 class GaveUpError(Exception):
-    """Raised by a :class:`Retryer` that has exceeded its maximum number
+    """
+    Raised by a :class:`Retryer` that has exceeded its maximum number
     of retries."""
     pass
 
-
 class DelayStrategy(object):
-    """Used by a :class:`Retryer` to determines how long to wait after an
-    attempt before the next retry. """
+    """
+    Used by a :class:`Retryer` to determines how long to wait after an
+    attempt before the next retry. 
+    """
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def next_delay(self, attempts):
-        """Returns the time to wait before the next attempt.
+        """
+        Returns the time to wait before the next attempt.
 
         :param attempts: The total number of (failed) attempts performed thus
           far.
@@ -31,10 +34,11 @@ class DelayStrategy(object):
         """
         pass
 
-
 class FixedDelayStrategy(DelayStrategy):
-    """A retry :class:`DelayStrategy` that produces a fixed delay between
-    attempts."""
+    """
+    A retry :class:`DelayStrategy` that produces a fixed delay between
+    attempts.
+    """
     def __init__(self, delay):
         """
         :param delay: Attempt delay.
@@ -45,9 +49,9 @@ class FixedDelayStrategy(DelayStrategy):
     def next_delay(self, attempts):
         return self.delay
 
-
 class ExponentialBackoffDelayStrategy(DelayStrategy):
-    """A retry :class:`DelayStrategy` that produces exponentially longer
+    """
+    A retry :class:`DelayStrategy` that produces exponentially longer
     delay between every attempt. The first attempt will be followed
     by a `<initial-delay> * 2**0` delay. The following delays will be
     `<initial-delay> * 2**1`, `<initial-delay> * 2**2`, and so on ...
@@ -66,25 +70,26 @@ class ExponentialBackoffDelayStrategy(DelayStrategy):
         delay_seconds = self.initial_delay.total_seconds() * 2 ** (attempts - 1)
         return timedelta(seconds=delay_seconds)
 
-
 class NoDelayStrategy(FixedDelayStrategy):
-    """A retry :class:`DelayStrategy` that doesn't introduce any delay between
-    attempts."""
+    """
+    A retry :class:`DelayStrategy` that doesn't introduce any delay between
+    attempts.
+    """
     def __init__(self):
         super(NoDelayStrategy, self).__init__(timedelta(seconds=0))
 
-
-
-
 class ErrorStrategy(object):
-    """Used by a :class:`Retryer` to determine which errors are to be
+    """
+    Used by a :class:`Retryer` to determine which errors are to be
     suppressed and which errors are to be re-raised and thereby end the
-    (re)trying."""
+    (re)trying.
+    """
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def should_suppress(self, error):
-        """Called after an attempt that raised an exception to determine if
+        """
+        Called after an attempt that raised an exception to determine if
         that error should be suppressed (continue retrying) or be re-raised
         (and end the retrying).
 
@@ -92,14 +97,14 @@ class ErrorStrategy(object):
         """
         pass
 
-
 class SuppressAllErrorStrategy(ErrorStrategy):
-    """An :class:`ErrorStrategy` that suppresses all types of errors raised
-    on attempts to perform the call."""
+    """
+    An :class:`ErrorStrategy` that suppresses all types of errors raised
+    on attempts to perform the call.
+    """
 
     def should_suppress(self, error):
         return True
-
 
 class StopStrategy(object):
     """Determines for how long a :class:`Retryer` should keep (re)trying."""
@@ -107,7 +112,8 @@ class StopStrategy(object):
 
     @abc.abstractmethod
     def should_continue(self, attempts, elapsed_time):
-        """Called after a failed attempt to determine if we should keep trying.
+        """
+        Called after a failed attempt to determine if we should keep trying.
 
         :param attempts: Total number of (failed) attempts thus far.
         :type attempts: int
@@ -119,25 +125,25 @@ class StopStrategy(object):
         """
         pass
 
-
 class NeverStopStrategy(StopStrategy):
     """A :class:`StopStrategy` that never gives up."""
     def should_continue(self, attempts, elapsed_time):
         return True
 
-
 class MaxRetriesStopStrategy(StopStrategy):
-    """A :class:`StopStrategy` that gives up after a certain number of
-    retries."""
+    """
+    A :class:`StopStrategy` that gives up after a certain number of
+    retries.
+    """
     def __init__(self, max_retries):
         self.max_retries = max_retries
 
     def should_continue(self, attempts, elapsed_time):
         return attempts <= self.max_retries
 
-
 class Retryer(object):
-    """A :class:`Retryer` makes repeated calls to a function until either
+    """
+    A :class:`Retryer` makes repeated calls to a function until either
     the return value satisfies a certain condition (`returnval_predicate`)
     or until a stop strategy (`stop_strategy`) determines that enough
     attempts have been made (or a too long time has elapsed). Should the
@@ -155,7 +161,8 @@ class Retryer(object):
             delay_strategy=NoDelayStrategy(),
             stop_strategy=NeverStopStrategy(),
             error_strategy=SuppressAllErrorStrategy()):
-        """Creates a new :class:`Retryer` set up to use a given set of
+        """
+        Creates a new :class:`Retryer` set up to use a given set of
         strategies to control its behavior.
 
         With only default values, the retryer will keep retrying
@@ -180,9 +187,9 @@ class Retryer(object):
         self.stop_strategy = stop_strategy
         self.error_strategy = error_strategy
 
-
     def call(self, function, *args, **kw):
-        """Calls the given `function`, with the given arguments, repeatedly
+        """
+        Calls the given `function`, with the given arguments, repeatedly
         until either (1) a satisfactory result is obtained (as indicated by
         the `returnval_predicate`), or (2) until the `stop_strategy`
         determines that no more attempts are to be made (results in a

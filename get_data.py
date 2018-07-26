@@ -51,4 +51,13 @@ if __name__ == "__main__":
             args.log_level))
     logging.root.setLevel(LOG_LEVELS[args.log_level])
 
-    print( args.start )
+    try:
+        if not args.password:
+            args.password = getpass.getpass("Enter password: ")
+        print(args.username, args.password)
+        with GarminClient(args.username, args.password) as client:
+            print(client.testing_function('2017-05-05'))
+    except Exception as e:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        log.error(u"Failed with exception: %s", e)
+        raise

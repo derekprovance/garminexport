@@ -1,5 +1,6 @@
 #! /usr/bin/env python
-"""A program that downloads one particular activity from a given Garmin
+"""
+A program that downloads one particular activity from a given Garmin
 Connect account and stores it locally on the user's computer.
 """
 import argparse

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
-"""Performs (incremental) backups of activities for a given Garmin Connect
+"""
+Performs (incremental) backups of activities for a given Garmin Connect
 account.
 The activities are stored in a local directory on the user's computer.
 The backups are incremental, meaning that only activities that aren't already

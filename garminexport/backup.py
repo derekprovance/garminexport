@@ -1,4 +1,5 @@
-"""Module with methods useful when backing up activities.
+"""
+Module with methods useful when backing up activities.
 """
 import codecs
 import json
@@ -23,16 +24,19 @@ format_suffix = {
 
 
 not_found_file = ".not_found"
-"""A file that lists all tried but failed export attempts. The lines in
+"""
+A file that lists all tried but failed export attempts. The lines in
 the file are the would-have-been file names, had the exports been successful.
 An entry in the ``.not_found`` file is a strong indication of an
 activity-format that simply doesn't exist and therefore should not be retried
 on the next backup run. One such scenario is for manually created activities,
-which cannot be exported to ``.fit`` format."""
+which cannot be exported to ``.fit`` format.
+"""
 
 
 def export_filename(activity, export_format):
-    """Returns a destination file name to use for a given activity that is
+    """
+    Returns a destination file name to use for a given activity that is
     to be exported to a given format. Exported files follow this pattern:
       ``<timestamp>_<activity_id>_<suffix>``.
     For example: ``2015-02-17T05:45:00+00:00_123456789.tcx``
@@ -53,7 +57,8 @@ def export_filename(activity, export_format):
 
 
 def need_backup(activities, backup_dir, export_formats=None):
-    """From a given set of activities, return all activities that haven't been
+    """
+    From a given set of activities, return all activities that haven't been
     backed up in a given set of export formats.
 
     Activities are considered already backed up if they, for each desired
@@ -94,7 +99,8 @@ def _not_found_activities(backup_dir):
 
 
 def download(client, activity, retryer, backup_dir, export_formats=None):
-    """Exports a Garmin Connect activity to a given set of formats
+    """
+    Exports a Garmin Connect activity to a given set of formats
     and saves the resulting file(s) to a given backup directory.
     In case a given format cannot be exported for the activity, the
     file name will be appended to the :attr:`not_found_file` in the

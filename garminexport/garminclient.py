@@ -1,8 +1,8 @@
 #! /usr/bin/env python
-"""A module for authenticating against and communicating with selected
+"""
+A module for authenticating against and communicating with selected
 parts of the Garmin Connect REST API.
 """
-
 import json
 import logging
 import os
@@ -36,9 +36,9 @@ logging.getLogger("requests").setLevel(logging.ERROR)
 SSO_LOGIN_URL = "https://sso.garmin.com/sso/login"
 """The Garmin Connect Single-Sign On login URL."""
 
-
 def require_session(client_function):
-    """Decorator that is used to annotate :class:`GarminClient`
+    """
+    Decorator that is used to annotate :class:`GarminClient`
     methods that need an authenticated session before being called.
     """
     @wraps(client_function)
@@ -49,9 +49,9 @@ def require_session(client_function):
         return client_function(*args, **kwargs)
     return check_session
 
-
 class GarminClient(object):
-    """A client class used to authenticate with Garmin Connect and
+    """
+    A client class used to authenticate with Garmin Connect and
     extract data from the user account.
 
     Since this class implements the context manager protocol, this object
@@ -60,7 +60,7 @@ class GarminClient(object):
     further interactions and logging out after the block completes or
     a failure occurs.
 
-    Example of use: ::
+    Example of use:
       with GarminClient("my.sample@sample.com", "secretpassword") as client:
           ids = client.list_activity_ids()
           for activity_id in ids:
@@ -69,7 +69,8 @@ class GarminClient(object):
     """
 
     def __init__(self, username, password):
-        """Initialize a :class:`GarminClient` instance.
+        """
+        Initialize a :class:`GarminClient` instance.
 
         :param username: Garmin Connect user name or email address.
         :type username: str
@@ -110,46 +111,37 @@ class GarminClient(object):
             SSO_LOGIN_URL, params=request_params, data=form_data)
         log.debug("got auth response: %s", auth_response.text)
         if auth_response.status_code != 200:
-            raise ValueError(
-                "authentication failure: did you enter valid credentials?")
-        auth_ticket_url = self._extract_auth_ticket_url(
-            auth_response.text)
+            raise ValueError("authentication failure: did you enter valid credentials?")
+        auth_ticket_url = self._extract_auth_ticket_url(auth_response.text)
         log.debug("auth ticket url: '%s'", auth_ticket_url)
 
         log.info("claiming auth ticket ...")
         response = self.session.get(auth_ticket_url)
         if response.status_code != 200:
-            raise RuntimeError(
-                "auth failure: failed to claim auth ticket: %s: %d\n%s" %
-                (auth_ticket_url, response.status_code, response.text))
+            raise RuntimeError("auth failure: failed to claim auth ticket: %s: %d\n%s" % (auth_ticket_url, response.status_code, response.text))
 
         # appears like we need to touch base with the old API to initiate
         # some form of legacy session. otherwise certain downloads will fail.
         self.session.get('https://connect.garmin.com/legacy/session')
 
-
-
     def _extract_auth_ticket_url(self, auth_response):
-        """Extracts an authentication ticket URL from the response of an
+        """
+        Extracts an authentication ticket URL from the response of an
         authentication form submission. The auth ticket URL is typically
         of form:
-
-          https://connect.garmin.com/modern?ticket=ST-0123456-aBCDefgh1iJkLmN5opQ9R-cas
-
+            https://connect.garmin.com/modern?ticket=ST-0123456-aBCDefgh1iJkLmN5opQ9R-cas
         :param auth_response: HTML response from an auth form submission.
         """
-        match = re.search(
-            r'response_url\s*=\s*"(https:[^"]+)"', auth_response)
+        match = re.search(r'response_url\s*=\s*"(https:[^"]+)"', auth_response)
         if not match:
-            raise RuntimeError(
-                "auth failure: unable to extract auth ticket URL. did you provide a correct username/password?")
+            raise RuntimeError("auth failure: unable to extract auth ticket URL. did you provide a correct username/password?")
         auth_ticket_url = match.group(1).replace("\\", "")
         return auth_ticket_url
 
-
     @require_session
     def list_activities(self):
-        """Return all activity ids stored by the logged in user, along
+        """
+        Return all activity ids stored by the logged in user, along
         with their starting timestamps.
 
         :returns: The full list of activity identifiers (along with their
@@ -169,7 +161,8 @@ class GarminClient(object):
 
     @require_session
     def _fetch_activity_ids_and_ts(self, start_index, max_limit=100):
-        """Return a sequence of activity ids (along with their starting
+        """
+        Return a sequence of activity ids (along with their starting
         timestamps) starting at a given index, with index 0 being the user's
         most recently registered activity.
 
@@ -185,16 +178,10 @@ class GarminClient(object):
           starting timestamps).
         :rtype: tuples of (int, datetime)
         """
-        log.debug("fetching activities {} through {} ...".format(
-            start_index, start_index+max_limit-1))
-        response = self.session.get(
-            "https://connect.garmin.com/modern/proxy/activitylist-service/activities/search/activities",
-            params={"start": start_index, "limit": max_limit})
+        log.debug("fetching activities {} through {} ...".format(start_index, start_index+max_limit-1))
+        response = self.session.get("https://connect.garmin.com/modern/proxy/activitylist-service/activities/search/activities", params={"start": start_index, "limit": max_limit})
         if response.status_code != 200:
-            raise Exception(
-                u"failed to fetch activities {} to {} types: {}\n{}".format(
-                    start_index, (start_index+max_limit-1),
-                    response.status_code, response.text))
+            raise Exception(u"failed to fetch activities {} to {} types: {}\n{}".format(start_index, (start_index+max_limit-1), response.status_code, response.text))
         activities = json.loads(response.text)
         if not activities:
             # index out of bounds or empty account
@@ -210,9 +197,22 @@ class GarminClient(object):
         log.debug("got {} activities.".format(len(entries)))
         return entries
 
+    def testing_function(self, request_date):
+        # TODO - delete this function used for testing
+        return request_date + " testing one two three"
+
+    @require_session
+    def get_daily_sleep_data(self, request_date):
+        daily_sleep_url = "https://connect.garmin.com/modern/proxy/wellness-service/wellness/dailySleepData/Aranzou?date={}&nonSleepBufferMinutes=60"
+        response = self.session.get(daily_sleep_url.format(request_date))
+        if response.status_code != 200:
+            raise Exception(u"Failed to fetch json dailySleepData for {}: {}\n{}".format(activity_id, response.status_code, response.text))
+        return json.loads(response.text)
+
     @require_session
     def get_activity_summary(self, activity_id):
-        """Return a summary about a given activity. The
+        """
+        Return a summary about a given activity. The
         summary contains several statistics, such as duration, GPS starting
         point, GPS end point, elevation gain, max heart rate, max pace, max
         speed, etc).
@@ -224,15 +224,14 @@ class GarminClient(object):
         """
         response = self.session.get("https://connect.garmin.com/modern/proxy/activity-service/activity/{}".format(activity_id))
         if response.status_code != 200:
-            log.error(u"failed to fetch json summary for activity {}: {}\n{}".format(
-                activity_id, response.status_code, response.text))
-            raise Exception(u"failed to fetch json summary for activity {}: {}\n{}".format(
-                activity_id, response.status_code, response.text))
+            log.error(u"Failed to fetch json summary for activity {}: {}\n{}".format(activity_id, response.status_code, response.text))
+            raise Exception(u"Failed to fetch json summary for activity {}: {}\n{}".format(activity_id, response.status_code, response.text))
         return json.loads(response.text)
 
     @require_session
     def get_activity_details(self, activity_id):
-        """Return a JSON representation of a given activity including
+        """
+        Return a JSON representation of a given activity including
         available measurements such as location (longitude, latitude),
         heart rate, distance, pace, speed, elevation.
 
@@ -244,13 +243,13 @@ class GarminClient(object):
         # mounted at xml or json depending on result encoding
         response = self.session.get("https://connect.garmin.com/modern/proxy/activity-service-1.3/json/activityDetails/{}".format(activity_id))
         if response.status_code != 200:
-            raise Exception(u"failed to fetch json activityDetails for {}: {}\n{}".format(
-                activity_id, response.status_code, response.text))
+            raise Exception(u"Failed to fetch json activityDetails for {}: {}\n{}".format(activity_id, response.status_code, response.text))
         return json.loads(response.text)
 
     @require_session
     def get_activity_gpx(self, activity_id):
-        """Return a GPX (GPS Exchange Format) representation of a
+        """
+        Return a GPX (GPS Exchange Format) representation of a
         given activity. If the activity cannot be exported to GPX
         (not yet observed in practice, but that doesn't exclude the
         possibility), a :obj:`None` value is returned.
@@ -273,14 +272,13 @@ class GarminClient(object):
         if response.status_code in (404, 204):
             return None
         if response.status_code != 200:
-            raise Exception(u"failed to fetch GPX for activity {}: {}\n{}".format(
-                activity_id, response.status_code, response.text))
+            raise Exception(u"failed to fetch GPX for activity {}: {}\n{}".format(activity_id, response.status_code, response.text))
         return response.text
-
 
     @require_session
     def get_activity_tcx(self, activity_id):
-        """Return a TCX (Training Center XML) representation of a
+        """
+        Return a TCX (Training Center XML) representation of a
         given activity. If the activity doesn't have a TCX source (for
         example, if it was originally uploaded in GPX format, Garmin
         won't try to synthesize a TCX file) a :obj:`None` value is
@@ -297,13 +295,12 @@ class GarminClient(object):
         if response.status_code == 404:
             return None
         if response.status_code != 200:
-            raise Exception(u"failed to fetch TCX for activity {}: {}\n{}".format(
-                activity_id, response.status_code, response.text))
+            raise Exception(u"Failed to fetch TCX for activity {}: {}\n{}".format(activity_id, response.status_code, response.text))
         return response.text
 
-
     def get_original_activity(self, activity_id):
-        """Return the original file that was uploaded for an activity.
+        """
+        Return the original file that was uploaded for an activity.
         If the activity doesn't have any file source (for example,
         if it was entered manually rather than imported from a Garmin
         device) then :obj:`(None,None)` is returned.
@@ -317,11 +314,9 @@ class GarminClient(object):
         response = self.session.get("https://connect.garmin.com/modern/proxy/download-service/files/activity/{}".format(activity_id))
         if response.status_code == 404:
             # Manually entered activity, no file source available
-            return (None,None)
+            return (None, None)
         if response.status_code != 200:
-            raise Exception(
-                u"failed to get original activity file for {}: {}\n{}".format(
-                activity_id, response.status_code, response.text))
+            raise Exception(u"Failed to get original activity file for {}: {}\n{}".format(activity_id, response.status_code, response.text))
 
         # return the first entry from the zip archive where the filename is
         # activity_id (should be the only entry!)
@@ -332,9 +327,9 @@ class GarminClient(object):
                 return ext[1:], zip.open(path).read()
         return (None,None)
 
-
     def get_activity_fit(self, activity_id):
-        """Return a FIT representation for a given activity. If the activity
+        """
+        Return a FIT representation for a given activity. If the activity
         doesn't have a FIT source (for example, if it was entered manually
         rather than imported from a Garmin device) a :obj:`None` value is
         returned.
@@ -353,7 +348,8 @@ class GarminClient(object):
 
     @require_session
     def upload_activity(self, file, format=None, name=None, description=None, activity_type=None, private=None):
-        """Upload a GPX, TCX, or FIT file for an activity.
+        """
+        Upload a GPX, TCX, or FIT file for an activity.
 
         :param file: Path or open file
         :param format: File format (gpx, tcx, or fit); guessed from filename if None
@@ -375,27 +371,23 @@ class GarminClient(object):
             if ext.lower() in ('.gpx','.tcx','.fit'):
                 format = ext.lower()[1:]
             else:
-                raise Exception(u"could not guess file type for {}".format(fn))
+                raise Exception(u"Could not guess file type for {}".format(fn))
 
         # upload it
         files = dict(data=(fn, file))
-        response = self.session.post("https://connect.garmin.com/modern/proxy/upload-service/upload/.{}".format(format),
-                                     files=files, headers={"nk": "NT"})
+        response = self.session.post("https://connect.garmin.com/modern/proxy/upload-service/upload/.{}".format(format), files=files, headers={"nk": "NT"})
 
         # check response and get activity ID
         try:
             j = response.json()["detailedImportResult"]
         except (json.JSONDecodeException, KeyError):
-            raise Exception(u"failed to upload {} for activity: {}\n{}".format(
-                format, response.status_code, response.text))
+            raise Exception(u"Failed to upload {} for activity: {}\n{}".format(format, response.status_code, response.text))
 
-        if len(j["failures"]) or len(j["successes"])<1:
-            raise Exception(u"failed to upload {} for activity: {}\n{}".format(
-                format, response.status_code, j["failures"]))
+        if len(j["failures"]) or len(j["successes"]) < 1:
+            raise Exception(u"Failed to upload {} for activity: {}\n{}".format(format, response.status_code, j["failures"]))
 
         if len(j["successes"])>1:
-            raise Exception(u"uploading {} resulted in multiple activities ({})".format(
-                format, len(j["successes"])))
+            raise Exception(u"Uploading {} resulted in multiple activities ({})".format(format, len(j["successes"])))
 
         activity_id = j["successes"][0]["internalId"]
 
@@ -410,7 +402,6 @@ class GarminClient(object):
             encoding_headers = {"Content-Type": "application/json; charset=UTF-8"} # see Tapiriik
             response = self.session.put("https://connect.garmin.com/proxy/activity-service/activity/{}".format(activity_id), data=json.dumps(data), headers=encoding_headers)
             if response.status_code != 204:
-                raise Exception(u"failed to set metadata for activity {}: {}\n{}".format(
-                    activity_id, response.status_code, response.text))
+                raise Exception(u"failed to set metadata for activity {}: {}\n{}".format(activity_id, response.status_code, response.text))
 
         return activity_id
