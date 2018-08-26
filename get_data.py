@@ -1,10 +1,12 @@
 #! /usr/bin/env python
-"""A program that downloads one particular activity from a given Garmin
+"""
+A program that downloads one particular activity from a given Garmin
 Connect account and stores it locally on the user's computer.
 """
 import argparse
 import getpass
 from garminexport.garminclient import GarminClient
+from garminexport.database import Database
 import garminexport.backup
 import logging
 import os
@@ -22,7 +24,6 @@ LOG_LEVELS = {
     "WARNING": logging.WARNING,
     "ERROR": logging.ERROR
 }
-"""Command-line (string-based) log-level mapping to logging module levels."""
 
 if __name__ == "__main__":
 
@@ -37,26 +38,41 @@ if __name__ == "__main__":
     parser.add_argument(
         "--password", type=str, help="Account password.")
     parser.add_argument(
-        "--days", type=int, help="Days back from start to process.")
+        "--end", type=str, help="Process multiple days.")
     parser.add_argument(
-        "--start", type=str, help="How many days from the current date to start processing?")
+        "--start", type=str, help="How many days from the current date to start processing? YYYY-MM-DD")
     parser.add_argument(
         "--log-level", metavar="LEVEL", type=str,
         help=("Desired log output level (DEBUG, INFO, WARNING, ERROR). "
               "Default: INFO."), default="INFO")
 
     args = parser.parse_args()
+
     if not args.log_level in LOG_LEVELS:
         raise ValueError("Illegal log-level argument: {}".format(
             args.log_level))
+
     logging.root.setLevel(LOG_LEVELS[args.log_level])
 
     try:
         if not args.password:
             args.password = getpass.getpass("Enter password: ")
-        print(args.username, args.password)
+
+        if not args.start:
+            request_date = (date.today() - timedelta(1)).strftime('%y-%m-%d')
+        else:
+            request_date = args.start
+        
+        db = Database()
+
+        logging.info("Pulling data for {}".format(request_date))
+    
         with GarminClient(args.username, args.password) as client:
-            print(client.testing_function('2017-05-05'))
+            db.insert_sleep_data(client.get_daily_sleep_data(request_date))
+            db.insert_hr_data(client.get_daily_hr_data(request_date))
+            db.insert_movement_data(client.get_daily_movement(request_date))
+            db.insert_user_summary(client.get_user_summary(request_date))
+            db.disconnect()
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         log.error(u"Failed with exception: %s", e)
