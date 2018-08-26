@@ -8,9 +8,9 @@ class Database(object):
 
     def connect(self):
         self.connection = pymysql.connect(
-            host='192.168.1.140',
-            user='biouser',
-            password='V52wbRAinObV',
+            host='127.0.0.1',
+            user='root',
+            password='',
             db='biometrics',
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor)
