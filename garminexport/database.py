@@ -1,6 +1,7 @@
 from datetime import date, timedelta, datetime
 from dateutil import parser
 import pymysql.cursors
+import os
 
 class Database(object):
     def __init__(self):
@@ -8,10 +9,10 @@ class Database(object):
 
     def connect(self):
         self.connection = pymysql.connect(
-            host='127.0.0.1',
-            user='root',
-            password='',
-            db='biometrics',
+            host=os.getenv('BIO_DB_HOST', '127.0.0.1'),
+            user=os.getenv('BIO_DB_USER', 'root'),
+            password=os.getenv('BIO_DB_PASS', ''),
+            db=os.getenv('BIO_DB', 'biometrics'),
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor)
 

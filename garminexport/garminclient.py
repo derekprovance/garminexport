@@ -60,7 +60,7 @@ class GarminClient(object):
     :param password: Garmin Connect account password.
     :type password: str
     """
-    def __init__(self, username, password):
+    def __init__(self, username, password=None):
         self.username = username
         self.password = password
         self.session = None
@@ -74,7 +74,8 @@ class GarminClient(object):
 
     def connect(self):
         self.session = requests.Session()
-        # self._authenticate()
+        if self.password != None:
+            self._authenticate()
 
     def disconnect(self):
         if self.session:

@@ -12,7 +12,8 @@ import logging
 import os
 import sys
 import traceback
-import dateutil.parser
+from dateutil import parser
+from datetime import date, timedelta
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)-15s [%(levelname)s] %(message)s")
@@ -25,28 +26,40 @@ LOG_LEVELS = {
     "ERROR": logging.ERROR
 }
 
+def process_range(start_date, end_date):
+    d1 = parser.parse(start_date)
+    d2 = parser.parse(end_date)
+
+    delta = d2 - d1
+    for i in range(delta.days + 1):
+        process(d1 + timedelta(i))
+
+def process(request_date):
+    logging.info("Pulling api data for {}".format(request_date))
+
+    db = Database()
+    with GarminClient(args.username) as client:
+        db.insert_sleep_data(client.get_daily_sleep_data(request_date))
+        db.insert_hr_data(client.get_daily_hr_data(request_date))
+        db.insert_movement_data(client.get_daily_movement(request_date))
+        db.insert_user_summary(client.get_user_summary(request_date))
+        db.disconnect()
+
 if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(
-        description=("Downloads one particular activity for a given "
-                     "Garmin Connect account."))
-    # positional args
-    parser.add_argument(
+    arg_parser = argparse.ArgumentParser(
+        description=("Downloads Daily API Information from Garmin."))
+    arg_parser.add_argument(
         "username", metavar="<username>", type=str, help="Account user name.")
-
-    # optional args
-    parser.add_argument(
-        "--password", type=str, help="Account password.")
-    parser.add_argument(
+    arg_parser.add_argument(
         "--end", type=str, help="Process multiple days.")
-    parser.add_argument(
+    arg_parser.add_argument(
         "--start", type=str, help="How many days from the current date to start processing? YYYY-MM-DD")
-    parser.add_argument(
+    arg_parser.add_argument(
         "--log-level", metavar="LEVEL", type=str,
         help=("Desired log output level (DEBUG, INFO, WARNING, ERROR). "
               "Default: INFO."), default="INFO")
 
-    args = parser.parse_args()
+    args = arg_parser.parse_args()
 
     if not args.log_level in LOG_LEVELS:
         raise ValueError("Illegal log-level argument: {}".format(
@@ -55,24 +68,15 @@ if __name__ == "__main__":
     logging.root.setLevel(LOG_LEVELS[args.log_level])
 
     try:
-        if not args.password:
-            args.password = getpass.getpass("Enter password: ")
-
         if not args.start:
             request_date = (date.today() - timedelta(1)).strftime('%y-%m-%d')
         else:
             request_date = args.start
-        
-        db = Database()
-
-        logging.info("Pulling data for {}".format(request_date))
-    
-        with GarminClient(args.username, args.password) as client:
-            db.insert_sleep_data(client.get_daily_sleep_data(request_date))
-            db.insert_hr_data(client.get_daily_hr_data(request_date))
-            db.insert_movement_data(client.get_daily_movement(request_date))
-            db.insert_user_summary(client.get_user_summary(request_date))
-            db.disconnect()
+            
+        if args.end:
+            process_range(args.start, args.end)
+        else:
+            process(request_date)
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         log.error(u"Failed with exception: %s", e)

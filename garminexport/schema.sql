@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS sleep_movement (
     sleep_id INT NOT NULL,
     start DATETIME,
     end DATETIME,
-    activity_level DECIMAL,
+    activity_level DECIMAL(14,13),
     FOREIGN KEY(sleep_id)
         REFERENCES sleep(id)
         ON UPDATE CASCADE ON DELETE CASCADE,
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS movement_data (
     id INT AUTO_INCREMENT,
     daily_statistics_id INT,
     event_time DATETIME,
-    movement DECIMAL,
+    movement DECIMAL(5,4),
     FOREIGN KEY(daily_statistics_id)
         REFERENCES daily_statistics(id)
         ON UPDATE CASCADE ON DELETE CASCADE,
