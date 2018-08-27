@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 logging.getLogger("requests").setLevel(logging.ERROR)
 
 SSO_LOGIN_URL = "https://sso.garmin.com/sso/login"
-GARMIN_API_URL = "https://connect.garmin.com/modern/proxy/"
+GARMIN_API_URL = "https://connect.garmin.com/modern/proxy"
 
 def require_session(client_function):
     @wraps(client_function)
@@ -60,9 +60,10 @@ class GarminClient(object):
     :param password: Garmin Connect account password.
     :type password: str
     """
-    def __init__(self, username, password=None):
+    def __init__(self, username, password, user=None):
         self.username = username
         self.password = password
+        self.user = user
         self.session = None
 
     def __enter__(self):
@@ -179,22 +180,22 @@ class GarminClient(object):
 
     @require_session
     def get_daily_sleep_data(self, request_date):
-        daily_sleep_url = GARMIN_API_URL + "/wellness-service/wellness/dailySleepData/{}?date={}&nonSleepBufferMinutes=60".format(self.username, request_date)
+        daily_sleep_url = GARMIN_API_URL + "/wellness-service/wellness/dailySleepData/{}?date={}&nonSleepBufferMinutes=60".format(self.user, request_date)
         return self.get_json_data(daily_sleep_url)
 
     @require_session
     def get_daily_hr_data(self, request_date):
-        daily_hr_url = GARMIN_API_URL + "/wellness-service/wellness/dailyHeartRate/{}?date={}&_=1532359756927".format(self.username, request_date)
+        daily_hr_url = GARMIN_API_URL + "/wellness-service/wellness/dailyHeartRate/{}?date={}&_=1532359756927".format(self.user, request_date)
         return self.get_json_data(daily_hr_url)
 
     @require_session
     def get_daily_movement(self, request_date):
-        daily_movement_url = GARMIN_API_URL + "/wellness-service/wellness/dailyMovement/{}?calendarDate={}&_=1532359756928".format(self.username, request_date)
+        daily_movement_url = GARMIN_API_URL + "/wellness-service/wellness/dailyMovement/{}?calendarDate={}&_=1532359756928".format(self.user, request_date)
         return self.get_json_data(daily_movement_url)
 
     @require_session
     def get_user_summary(self, request_date):
-        user_summary_url = GARMIN_API_URL + "/usersummary-service/usersummary/daily/{}?calendarDate={}&_=1532359756925".format(self.username, request_date)
+        user_summary_url = GARMIN_API_URL + "/usersummary-service/usersummary/daily/{}?calendarDate={}&_=1532359756925".format(self.user, request_date)
         return self.get_json_data(user_summary_url)
 
     """

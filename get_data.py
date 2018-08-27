@@ -38,7 +38,7 @@ def process(request_date):
     logging.info("Pulling api data for {}".format(request_date))
 
     db = Database()
-    with GarminClient(args.username) as client:
+    with GarminClient(args.username, args.password, args.user) as client:
         db.insert_sleep_data(client.get_daily_sleep_data(request_date))
         db.insert_hr_data(client.get_daily_hr_data(request_date))
         db.insert_movement_data(client.get_daily_movement(request_date))
@@ -46,14 +46,12 @@ def process(request_date):
         db.disconnect()
 
 if __name__ == "__main__":
-    arg_parser = argparse.ArgumentParser(
-        description=("Downloads Daily API Information from Garmin."))
-    arg_parser.add_argument(
-        "username", metavar="<username>", type=str, help="Account user name.")
-    arg_parser.add_argument(
-        "--end", type=str, help="Process multiple days.")
-    arg_parser.add_argument(
-        "--start", type=str, help="How many days from the current date to start processing? YYYY-MM-DD")
+    arg_parser = argparse.ArgumentParser(description=("Downloads Daily API Information from Garmin."))
+    arg_parser.add_argument("username", metavar="<username>", type=str, help="Account email address.")
+    arg_parser.add_argument("user", metavar="<user>", type=str, help="Account user")
+    arg_parser.add_argument("--password", type=str, help="Account password.")
+    arg_parser.add_argument("--end", type=str, help="Process multiple days.")
+    arg_parser.add_argument("--start", type=str, help="How many days from the current date to start processing? YYYY-MM-DD")
     arg_parser.add_argument(
         "--log-level", metavar="LEVEL", type=str,
         help=("Desired log output level (DEBUG, INFO, WARNING, ERROR). "
