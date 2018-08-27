@@ -26,24 +26,23 @@ LOG_LEVELS = {
     "ERROR": logging.ERROR
 }
 
-def process_range(start_date, end_date):
+def process_range(client, start_date, end_date):
     d1 = parser.parse(start_date)
     d2 = parser.parse(end_date)
 
     delta = d2 - d1
     for i in range(delta.days + 1):
-        process(d1 + timedelta(i))
+        process(client, d1 + timedelta(i))
 
-def process(request_date):
+def process(client, request_date):
     logging.info("Pulling api data for {}".format(request_date))
 
     db = Database()
-    with GarminClient(args.username, args.password, args.user) as client:
-        db.insert_sleep_data(client.get_daily_sleep_data(request_date))
-        db.insert_hr_data(client.get_daily_hr_data(request_date))
-        db.insert_movement_data(client.get_daily_movement(request_date))
-        db.insert_user_summary(client.get_user_summary(request_date))
-        db.disconnect()
+    db.insert_sleep_data(client.get_daily_sleep_data(request_date))
+    db.insert_hr_data(client.get_daily_hr_data(request_date))
+    db.insert_movement_data(client.get_daily_movement(request_date))
+    db.insert_user_summary(client.get_user_summary(request_date))
+    db.disconnect()
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser(description=("Downloads Daily API Information from Garmin."))
@@ -71,10 +70,11 @@ if __name__ == "__main__":
         else:
             request_date = args.start
             
-        if args.end:
-            process_range(args.start, args.end)
-        else:
-            process(request_date)
+        with GarminClient(args.username, args.password, args.user) as client:
+            if args.end:
+                process_range(client, args.start, args.end)
+            else:
+                process(client, request_date)
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         log.error(u"Failed with exception: %s", e)
