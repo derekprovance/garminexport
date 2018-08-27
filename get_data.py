@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     try:
         if not args.start:
-            request_date = (date.today() - timedelta(1)).strftime('%y-%m-%d')
+            request_date = (date.today() - timedelta(1)).strftime('%Y-%m-%d')
         else:
             request_date = args.start
             
